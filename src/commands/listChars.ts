@@ -36,7 +36,18 @@ export async function run(client:Client, message:Message, args:string[]) {
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAqwjdp8e_fM1Q30pyyvGVeFjBBc5rFnsvsfAKTPIdCAQWI0m1wv80PhXfWJiwkONe79A&usqp=CAU',
     })
 
-  await message.channel.send({ embeds: [embed] })
+    if(message.channel.type === 0){
+      await message.channel.send({ embeds: [embed] })
+
+    }else if(message.channel.type ===1){
+      let msg = `# Lista de personajes de ${message.author.username} \n\n`
+
+      characters.map((character, index)=>{
+        msg += `${index+1}-> **${character.name?.charAt(0).toUpperCase()}${character.name?.slice(1)}**. \n`
+      })
+
+      await message.channel.send(msg)
+    }
 }
 
 export const help = {

@@ -8,6 +8,7 @@ import {
   Message,
   Interaction,
   AnySelectMenuInteraction,
+  Events,
 } from 'discord.js'
 import { Character } from '../db/models/characters'
 import { User } from '../db/models/user'
@@ -37,9 +38,9 @@ export async function run(client: Client, message: Message, args: string[]) {
     return
   }
 
-  const nombre = args.join(' ')
+  const user = await User.findOne({ where: { name: message.author.username } })
   var new_char = new base_stats()
-  new_char.name = nombre
+  new_char.name = args.join(' ')
 
   const msgEmbed = async (
     character: base_stats,
@@ -53,7 +54,7 @@ export async function run(client: Client, message: Message, args: string[]) {
     const embed = new EmbedBuilder()
       .setTitle('Creacion de personaje')
       .setColor('Red')
-      .setDescription(`Creacion del personaje **${nombre}**`)
+      .setDescription(`Creacion del personaje **${new_char.name}**`)
       .addFields(fields)
       .setTimestamp()
       .setAuthor({
@@ -111,44 +112,66 @@ export async function run(client: Client, message: Message, args: string[]) {
         .setValue(index.toString())
     })
 
-  client.on('interactionCreate', async (interaction: Interaction) => {
-    if (!interaction.isButton()) return
+  menu.setOptions(options)
 
-    if (interaction.customId === 'set_stats') {
-      menu.addOptions(options)
-
-      await interaction.reply({
-        content: 'Selecciona una estadística para establecer su valor:',
+  const show_menu = async (InteractionResponse:Interaction) => {
+    if (
+      InteractionResponse.isButton() &&
+      InteractionResponse.customId === 'set_stats'
+    ) {
+      return InteractionResponse.reply({
+        content: 'Selecciona una estadistica para establecer su valor',
         components: [
           new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu),
         ],
         ephemeral: true,
       })
+        .then(async () => {
+         client.removeListener(Events.InteractionCreate, show_menu)
+        })
+        .catch((err) => {})
     }
-  })
+  }
 
-  client.on('interactionCreate', async (interaction: Interaction) => {
-    if (!interaction.isAnySelectMenu()) return
 
-    if (interaction.customId === 'stats_menu') {
+  const set_stats = async (InteractionResponse:Interaction) => {
+    if (
+      InteractionResponse.isAnySelectMenu() &&
+      InteractionResponse.customId === 'stats_menu'
+    ) {
+  
       const stat = Object.keys(new_char).filter(
         (stat) => stat !== 'name' && stat !== 'Puntos de caracteristica'
-      )[parseInt(interaction.values[0])]
+      )[parseInt(InteractionResponse.values[0])]
 
-      await interaction.reply({
-        content: `Has seleccionado ${stat}. Ahora introduce el valor:`,
+      await InteractionResponse.reply({
+        content: `Has seleccionado ${stat}. Introduce el valor a asignar`,
         ephemeral: true,
-      })
+      }).catch((err) => {})
 
-      const filter = (m: Message) => m.author.id === interaction.user.id
-
-      const collector = interaction.channel?.createMessageCollector({
+      const filter = (m: Message) => m.author.id === InteractionResponse.user.id
+      const collector = InteractionResponse.channel?.createMessageCollector({
         filter,
         max: 1,
       })
-
+      console.log('interaccion del menu')
       collector?.on('collect', async (message) => {
-        if (!isNaN(Number(message.content))) {
+        if (isNaN(Number(message.content))) {
+          await InteractionResponse.followUp({
+            content: 'Valor ingresado no valido.',
+            ephemeral: true,
+          })
+
+          await InteractionResponse.followUp({
+            components: [
+              new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+                menu
+              ),
+            ],
+            ephemeral: true,
+          })
+          return
+        } else {
           if (
             new_char['Puntos de caracteristica'] - parseInt(message.content) <
             0
@@ -156,9 +179,9 @@ export async function run(client: Client, message: Message, args: string[]) {
             await message.channel.send(
               `Solo tienes ${new_char['Puntos de caracteristica']} punto(s) disponible(s)`
             )
-            await msgEmbed(new_char, interaction)
+            await msgEmbed(new_char, InteractionResponse)
 
-            await interaction.followUp({
+            await InteractionResponse.followUp({
               components: [
                 new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
                   menu
@@ -166,7 +189,6 @@ export async function run(client: Client, message: Message, args: string[]) {
               ],
               ephemeral: true,
             })
-
             return
           }
 
@@ -184,21 +206,21 @@ export async function run(client: Client, message: Message, args: string[]) {
           new_char['Puntos de caracteristica'] -= parseInt(message.content)
           message.delete()
 
-          await msgEmbed(new_char, interaction)
+          await msgEmbed(new_char, InteractionResponse)
           if (new_char['Puntos de caracteristica'] == 0) {
-            await interaction.followUp({
+            await InteractionResponse.followUp({
               content: `${stat} definida con **${message.content} pts**. No tienes mas puntos disponibles`,
               ephemeral: true,
-            })
+            }).catch((err) => {})
             return
           }
-          await interaction.followUp({
+          await InteractionResponse.followUp({
             content: `${stat} definida con **${message.content} pts**. Te quedan **${new_char['Puntos de caracteristica']}** puntos disponibles`,
             ephemeral: true,
           })
 
           if (new_char['Puntos de caracteristica'] > 0) {
-            await interaction.followUp({
+            await InteractionResponse.followUp({
               components: [
                 new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
                   menu
@@ -206,53 +228,44 @@ export async function run(client: Client, message: Message, args: string[]) {
               ],
               ephemeral: true,
             })
+            return
           }
-        } else {
-          await interaction.followUp({
-            content: 'Valor ingresado no valido.',
-            ephemeral: true,
-          })
-
-          await interaction.followUp({
-            components: [
-              new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-                menu
-              ),
-            ],
-            ephemeral: true,
-          })
         }
       })
+      client.removeListener(Events.InteractionCreate, set_stats)
     }
-  })
+  }
 
-  client.on('interactionCreate', async (interaction: Interaction) => {
-    if (!interaction.isButton()) return
-
-    if (interaction.customId === 'save_char') {
-      await interaction.reply({
-        content: 'Guardando el personaje...',
-        ephemeral: true,
-      })
-
-      try {
-
-        const user = await User.findOne({where:{name:message.author.username}})
-        const char = await Character.create({
-          ...new_char,
+  const save =async (interaction:Interaction) => {
+    if(interaction.isButton() && interaction.customId === 'save_char'){
+      try{
+        await interaction.reply({
+          content:'Guardando el personaje...',
+          ephemeral:true
         })
-        
-        await char.setUser(user?.id as number)
+
+        const char = await Character.create({...new_char})
+        await char.setUser(user!)
+        .then(()=>{
+          client.removeListener(Events.InteractionCreate, save)
+        })
 
         await interaction.followUp({
-          content: `Personaje ${new_char['name']} ha sido guardado con exito`,
-          ephemeral: true,
+          content:`Personaje **${char.name}** guardado con exito!`,
+          ephemeral:true
         })
-      } catch (error) {
-        console.log(error)
+
+        return;
+      }catch(err){  
+        console.log(err)
       }
     }
-  })
+  }
+
+  client.on(Events.InteractionCreate, show_menu)
+  client.on(Events.InteractionCreate, set_stats)
+  client.on(Events.InteractionCreate, save)
+
 }
 
 export const help = {
