@@ -1,6 +1,6 @@
 import { Message } from 'discord.js'
-import { Session } from '../db/models/sessions'
-import { User } from '../db/models/user'
+import { Session } from '../../db/models/sessions'
+import { User } from '../../db/models/user'
 
 
 

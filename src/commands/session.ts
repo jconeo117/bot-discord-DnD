@@ -3,10 +3,10 @@ import {
   EmbedBuilder,
   Message,
 } from 'discord.js'
-import { initsesion } from '../utils/initsesion'
-import { joinsesion } from '../utils/joinsesion'
-import { startSession } from '../utils/startsesion'
-import { finishSession } from '../utils/finishsesion'
+import { initsesion } from '../utils/session/initsesion'
+import { joinsesion } from '../utils/session/joinsesion'
+import { startSession } from '../utils/session/startsesion'
+import { finishSession } from '../utils/session/finishsesion'
 // import { Session, Character, User } from '../db/models'
 
 import { Session } from '../db/models/sessions'

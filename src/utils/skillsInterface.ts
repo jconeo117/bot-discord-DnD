@@ -3,7 +3,7 @@ enum typeAttack {
   Distancia = 'Distancia',
 }
 
-enum typeSkill{
+enum typeSkill {
   attack = 'Attack',
   buff = 'Buffer',
   // invocate = 'Invocacion',
@@ -27,78 +27,11 @@ enum Debuff {
   Conmocion = 'Conmocion',
 }
 
-interface AttackInterface {
-  DañoAdicional?: {
-    description: string
-    bonoDmg: number
-    costPj: {
-      buy: number
-      scaling: number
-    }
-  }
-  ignoreStat?: {
-    description: string
-    ignoreStat: IgnoreStat
-    bonoDecrement?: number
-    costPj: {
-      buy: number
-      scaling: number
-    }
-  }
-  incrementStat?: {
-    description: string
-    incrementStat: IncrementStat
-    bonoIncrement: number
-    costPj: {
-      buy: number
-      scaling: number
-    }
-  }
-  debuff?: {
-    description: string
-    debuff: Debuff
-    damageResidual: number | string
-    costPj: {
-      buy: number
-      scaling: number
-    }
-  }
-  stun?: {
-    description: string
-    stun: boolean
-    costPj: {
-      buy: number
-    }
-  }
-  combo?: {
-    description: string
-    comboBonification: number
-    nroHits: number
-    costPj: {
-      buy: number
-      scaling: number
-    }
-  }
-  lifeSteal?: {
-    description: string
-    lifeSteal: number
-    costPj: {
-      buy: number
-      scaling: number
-    }
-  }
-  manaSteal?: {
-    description: string
-    manaSteal: number
-    costPj: {}
-  }
-}
-
 interface BuffInterface {
   sage_mode?: {
     description: string
     // level: number
-    incrementStats: number|string[]
+    incrementStats: number | string[]
     bonoIncrement: number
     costPj: {
       buy: number
@@ -193,14 +126,128 @@ interface BuffInterface {
   }
 }
 
-// export interface SkillInterface {
-//   name: string
-//   description: string
-//   descriptionEffetcs: string
-//   level: number
-//   attack?: typeAttack
-//   type: typeSkill
-//   efects: AttackInterface | BuffInterface
-// }
+interface Attack {
+  formatDescription(description: string, bono: number): string | undefined
+  effects: {
+    [key: string]: {
+      description: string
+      bono?: number
+      ignoreStat?: IgnoreStat
+      incrementStat?: IncrementStat
+      debuff?: Debuff
+      stun?: boolean
+      costPj: {
+        buy: number
+        scaling?: number
+      }
+    }
+  }
+}
 
-export {BuffInterface, AttackInterface, typeAttack, typeSkill}
+const effects_info: Attack = {
+  formatDescription(description: string, bono?: number) {
+    if (bono) {
+      return description.replace('${bono}', `${bono}`)
+    }
+    return description
+  },
+  effects: {
+    ['Daño adicional']: {
+      description: 'inflinge **+${bono}pts** daño adicional.',
+      bono: 1,
+      costPj: {
+        buy: 1,
+        scaling: 1,
+      },
+    },
+    absorcion: {
+      description: 'ignora la absorcion del enemigo',
+      ignoreStat: IgnoreStat.Absorcion,
+      costPj: {
+        buy: 4,
+      },
+    },
+    'Defensa Melee': {
+      description: 'ignora la defensa melee del enemigo en **-${bono}**.',
+      ignoreStat: IgnoreStat['Defensa Melee'],
+      bono: 2,
+      costPj: {
+        buy: 3,
+        scaling: 1,
+      },
+    },
+    'Defensa a distancia': {
+      description: 'ignora la defensa a distancia del enemigo en **-${bono}**.',
+      ignoreStat: IgnoreStat['Defensa a Distancia'],
+      bono: 2,
+      costPj: {
+        buy: 3,
+        scaling: 1,
+      },
+    },
+    'Ataque Melee': {
+      description: 'aumenta el ataque melee del jugador en **+${bono}**',
+      incrementStat: IncrementStat['Ataque Melee'],
+      bono: 1,
+      costPj: {
+        buy: 1,
+        scaling: 1,
+      },
+    },
+    'Ataque a distancia': {
+      description: 'aumenta el ataque a distancia del jugador en **+${bono}**',
+      incrementStat: IncrementStat['Ataque a Distancia'],
+      bono: 1,
+      costPj: {
+        buy: 1,
+        scaling: 1,
+      },
+    },
+    sangrado: {
+      description:
+        'provoca sangrado en el enemigo. Causa **${bono}** de daño residual',
+      bono: 3,
+      debuff: Debuff.Sangrado,
+      costPj: {
+        buy: 2,
+        scaling: 2,
+      },
+    },
+    stun: {
+      description: 'provoca aturdimiento al enemigo durante 1 turno.',
+      stun: true,
+      costPj: {
+        buy: 4,
+      },
+    },
+    combo: {
+      description: 'por cada golpe exitoso aumenta el daño en **+${bono}**.',
+      bono: 1,
+      costPj: {
+        buy: 2,
+        scaling: 2,
+      },
+    },
+    lifeSteal: {
+      description:
+        'roba **${bono}PV** del enemigo por cada 10 puntos de daño causado.',
+      bono: 1,
+      costPj: {
+        buy: 1,
+        scaling: 1,
+      },
+    },
+    manaSteal: {
+      description:
+        'roba **${bono}PK** del enemigo por cada 10 puntos de daño causado.',
+      bono: 1,
+      costPj: {
+        buy: 1,
+        scaling: 1,
+      },
+    },
+  },
+}
+
+
+export { BuffInterface, typeAttack, typeSkill, Attack, effects_info }

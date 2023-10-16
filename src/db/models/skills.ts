@@ -3,7 +3,7 @@ import { db } from '../db'
 import {
   typeAttack,
   typeSkill,
-  AttackInterface,
+  Attack,
   BuffInterface,
 } from '../../utils/skillsInterface'
 import { CharacterInterface } from './characters'
@@ -17,7 +17,7 @@ interface SkillInterface extends Model {
   level: number
   attack?: typeAttack
   skilltype: typeSkill
-  efects: AttackInterface | BuffInterface
+  efects: Attack['effects'] | BuffInterface
 
   setCharacter: BelongsToSetAssociationMixin<CharacterInterface,number>
 }
@@ -30,7 +30,11 @@ class Skill extends Model implements SkillInterface{
   level!: number;
   attack?: typeAttack;
   skilltype!: typeSkill;
-  efects!: AttackInterface | BuffInterface;
+  efects: Attack['effects'] | BuffInterface = {}
+
+  addEffect(name: string, effect: Attack['effects'][string]) {
+    (this.efects as any)[name] = effect;
+  }
   
   public setCharacter!: BelongsToSetAssociationMixin<CharacterInterface,number>
 }

@@ -1,5 +1,5 @@
-export function calculateDmg(points: number, current_points?: number): string {
-  var pc: number = points + current_points!
+export function calculateDmg(points: number, current_points: number = 0): string {
+  var pc: number = points + current_points
   const dice = Math.floor(pc / 3)
   const modifier = pc % 3
 

@@ -10,9 +10,9 @@ import {
 
 // import { Character, Session, User } from '../db/models'
 
-import { Session } from '../db/models/sessions'
-import { User } from '../db/models/user'
-import { Character } from '../db/models/characters'
+import { Session } from '../../db/models/sessions'
+import { User } from '../../db/models/user'
+import { Character } from '../../db/models/characters'
 
 
 

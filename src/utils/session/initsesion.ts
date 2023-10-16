@@ -1,7 +1,7 @@
 import { EmbedBuilder, Message } from 'discord.js'
-import { Session } from '../db/models/sessions'
+import { Session } from '../../db/models/sessions'
 // import { User } from '../db/models/Users'
-import { User } from '../db/models/user'
+import { User } from '../../db/models/user'
 
 export const initsesion = async (
   embed: EmbedBuilder,
