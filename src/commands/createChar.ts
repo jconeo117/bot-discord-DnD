@@ -200,7 +200,7 @@ export async function run(client: Client, message: Message, args: string[]) {
           } else if (stat === 'Puntos Vitales' || stat === 'Puntos de ki') {
             new_char[stat] += parseInt(message.content) * 5
           } else {
-            new_char[stat] = parseInt(message.content as string)
+            (new_char[stat] as number) += parseInt(message.content as string) 
           }
 
           new_char['Puntos de caracteristica'] -= parseInt(message.content)
@@ -232,7 +232,7 @@ export async function run(client: Client, message: Message, args: string[]) {
           }
         }
       })
-      client.removeListener(Events.InteractionCreate, set_stats)
+      // client.removeListener(Events.InteractionCreate, set_stats)
     }
   }
 
