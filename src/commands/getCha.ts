@@ -4,8 +4,6 @@ import { Client, EmbedBuilder, Message } from 'discord.js'
 import { Character } from '../db/models/characters'
 import { User } from '../db/models/user'
 
-
-
 export async function run(client: Client, message: Message, args: string[]) {
   //verificar que se haya proporcionado al menos el nombre del personaje
   if (!args[0] || args[0].trim() === '') {
@@ -25,39 +23,7 @@ export async function run(client: Client, message: Message, args: string[]) {
     return
   }
 
-  const fields = Object.keys(character.dataValues)
-    .filter(
-      (key) =>
-        key !== 'name' &&
-        key !== 'createdAt' &&
-        key !== 'updatedAt' &&
-        key !== 'id' &&
-        key !== 'userId'
-    )
-    .map((key) => ({
-      name: ' ',
-      value: `**${key}**: ${character[key as keyof Character] || 0}`,
-    }))
-
-  const embed = new EmbedBuilder()
-    .setColor('Red')
-    .setTitle(`Estadisticas del personaje ${character.name}`)
-    .addFields(fields)
-    .setTimestamp()
-    .setAuthor({
-      name: message.author.username,
-      iconURL: message.author.avatarURL() || message.author.displayAvatarURL(),
-    })
-    .setFooter({
-      text: 'Mamaguevo Inc.',
-      iconURL:
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAqwjdp8e_fM1Q30pyyvGVeFjBBc5rFnsvsfAKTPIdCAQWI0m1wv80PhXfWJiwkONe79A&usqp=CAU',
-    })
-
-  if (message.channel.type === 0) {
-    await message.channel.send({ embeds: [embed] })
-  } else if (message.channel.type === 1) {
-    const text = `
+  const text = `
       ## Estadisticas de ${character.name}:
 
       - **Iniciativa**: +${character.iniciativa}
@@ -74,8 +40,7 @@ export async function run(client: Client, message: Message, args: string[]) {
       - **Puntos de caracteristica**: ${character['Puntos de caracteristica']}
       `
 
-    await message.channel.send(text)
-  }
+  await message.channel.send(text)
 }
 
 export const help = {

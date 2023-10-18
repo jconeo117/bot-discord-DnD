@@ -25,13 +25,15 @@ export async function run(
   command: string
 ) {
   const user = await User.findOne({ where: { name: message.author.username } })
-  const emojis = ['1', '2', '3', '4', '5']
+  const emojis = ['-2', '-1', '+1', '+2', 'guardar']
 
   const characters = await user?.getCharacters()
   let char: Character
   let skill_type: string
   let msg: InteractionResponse | Message
+  let bonification:number
   var effect: any
+  let costPj:number = 0
 
   if (!characters![0]) {
     await message.channel.send('No tienes personajes para crear habilidades')
@@ -63,7 +65,6 @@ export async function run(
       interaction.isAnySelectMenu() &&
       interaction.customId === 'select_char'
     ) {
-      // char = await set_character(interaction, menu, char, characters!) as Character
 
       char = characters![parseInt(interaction.values[0])]
 
@@ -138,6 +139,7 @@ export async function run(
       interaction.isAnySelectMenu() &&
       interaction.customId === 'skill_effects'
     ) {
+
       ;[effect] = Object.entries(effects_info.effects).filter(
         (efect) => efect[0] === interaction.values[0]
       )
@@ -151,7 +153,9 @@ export async function run(
         } `
       }
 
+      costPj += effect[1].costPj.buy
       skill.addEffect(effect[0], effect[1])
+      console.log('costo de compra:',costPj)
 
       const buttons = emojis.map((num) => {
         return new ButtonBuilder().setLabel(num).setCustomId(num).setStyle(2)
@@ -175,28 +179,33 @@ export async function run(
       }
 
       return
-    } else if (interaction.isButton()) {
-      let level = interaction.customId
+    } else if (interaction.isButton() && interaction.customId != 'guardar') {
 
+      bonification = parseInt(interaction.customId)
+      let costPjscaling:number
       let base = effects_info.formatDescription(
         effect[1].description as string,
         effect[1].bono!
       )
 
       if (effect[1].bono) {
-        effect[1].bono = effect[1].costPj?.scaling! * Number(level)
+        if(effect[1].bono + bonification >=1){
+          effect[1].bono += bonification
+          costPjscaling = costPj + (effect[1].bono -1) * effect[1].costPj.scaling
+          console.log('costo final del escalado',costPjscaling)
+        }
       }
 
       let bonus = effects_info.formatDescription(
         effect[1].description,
         effect[1].bono!
-      )
-
-      description = description.replace(base!, bonus as string)
-
-      msg.edit({
-        content: description,
-      })
+        )
+        
+        description = description.replace(base!, bonus as string)
+        
+        msg.edit({
+          content: description,
+        })
 
       interaction.deferUpdate()
 
