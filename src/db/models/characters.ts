@@ -1,4 +1,4 @@
-import { BelongsToSetAssociationMixin, DataTypes, HasManySetAssociationsMixin, Model } from "sequelize"
+import { BelongsToSetAssociationMixin, DataTypes, HasManyGetAssociationsMixin, HasManySetAssociationsMixin, Model } from "sequelize"
 import { db } from "../db"
 import { UserInterface } from "./user"
 import { SkillInterface } from "./skills"
@@ -22,6 +22,7 @@ interface CharacterInterface extends Model {
 
   setUser: BelongsToSetAssociationMixin<UserInterface, number>
   setSkill: HasManySetAssociationsMixin<SkillInterface, number>
+  getSkills: HasManyGetAssociationsMixin<SkillInterface>
 }
 
 class Character extends Model implements CharacterInterface {
@@ -39,9 +40,10 @@ class Character extends Model implements CharacterInterface {
   'Control de ki'?: number
   'Puntos de ki'?: number
   'Puntos de caracteristica'?: number
-
+  
   public setUser!: BelongsToSetAssociationMixin<UserInterface, number>
   public setSkill!: HasManySetAssociationsMixin<SkillInterface, number>
+  public getSkills!: HasManyGetAssociationsMixin<SkillInterface>
 }
 
 Character.init(
