@@ -11,10 +11,10 @@ import {
   StringSelectMenuOptionBuilder,
 } from 'discord.js'
 import { User } from '../db/models/user'
-import { Attack, effects_info, typeSkill } from '../utils/skillsInterface'
+import { Attack, attacks_effects, typeSkill } from '../utils/skillsInterface'
 import { Character } from '../db/models/characters'
 import { Skill, SkillInterface } from '../db/models/skills'
-import { setPJ } from '../utils/skill/skill.utils'
+import { selectType, setPJ, typeOptions } from '../utils/skill/skill.utils'
 
 let description = ``
 let skill = new Skill()
@@ -160,28 +160,10 @@ export async function run(
 
       menu.setCustomId('skill_effects').setPlaceholder('Selecciona el efecto')
 
-      const skill_opts = Object.entries(effects_info.effects).map(
-        ([key, effect]) => {
-          return new StringSelectMenuOptionBuilder().setLabel(key).setValue(key)
-        }
-      )
-
-      const fields = Object.entries(effects_info.effects).map(
-        ([key, effect]) => ({
-          name: `${key} (**${effect.costPj.buy}PJ**)`,
-          value: `${effects_info.formatDescription(
-            effect.description,
-            effect.bono!
-          )} ${
-            effect.bono
-              ? `Cada **${effect.costPj.scaling}PJ** aumenta el bono`
-              : ''
-          }`,
-        })
-      )
-
-      menu.setOptions(skill_opts)
-      embed.addFields(fields)
+      //opciones del menu dependiendo del tipo de skill.
+      menu.setOptions(typeOptions(skill_type))
+      //campos del embed dependiendo del tipo de skill.
+      embed.addFields(selectType(skill_type))
 
       await interaction.reply({
         embeds: [embed],
@@ -195,7 +177,7 @@ export async function run(
       interaction.isAnySelectMenu() &&
       interaction.customId === 'skill_effects'
     ) {
-      ;[effect] = Object.entries(effects_info.effects).filter(
+      ;[effect] = Object.entries(attacks_effects.effects).filter(
         (efect) => efect[0] === interaction.values[0]
       )
       ;(habilitie[effect[0]] = habilitie[effect[0]] || {}).costBuy =
@@ -208,7 +190,7 @@ export async function run(
         }, 0)
         if (skillPjCost <= pointsJutsu) {
           description += `${
-            effects_info.formatDescription(
+            attacks_effects.formatDescription(
               effect[1].description,
               effect[1].bono!
             ) as string
@@ -257,7 +239,7 @@ export async function run(
       return
     } else if (interaction.isButton() && interaction.customId != 'guardar') {
       bonification = parseInt(interaction.customId)
-      let base = effects_info.formatDescription(
+      let base = attacks_effects.formatDescription(
         effect[1].description as string,
         effect[1].bono!
       )
@@ -291,7 +273,7 @@ export async function run(
       console.log('costo final del escalado', habilitie)
       console.log('total de PJ -->', skillPjCost)
 
-      let bonus = effects_info.formatDescription(
+      let bonus = attacks_effects.formatDescription(
         effect[1].description,
         effect[1].bono!
       )

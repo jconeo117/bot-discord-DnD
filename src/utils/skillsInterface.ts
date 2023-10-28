@@ -126,6 +126,41 @@ interface BuffInterface {
   }
 }
 
+
+interface buffs{
+  formatDescription(description: string, bono: number,  scaling?:number, decreaseStat?:number, incrementStat?:number, active?:number, keepactive?:number): string | undefined
+  buffos:{
+    [key:string]:{
+      description:string
+      bonoIncrement?:number
+      incrementStat?:{
+        'iniciativa'?:number
+        'Daño'?:number
+        'Ataque'?:number
+      }
+      decreaseStat?:{
+        'puntos vitales'?:number
+        'absorcion'?:number
+        'defensa'?:number
+      }
+      saving_throw?: {
+        nro: number
+        perturns: number
+      }
+      costPj:{
+        buy:number
+        scaling?:number
+      }
+      costKi:{
+        active:number
+        keepActive:number
+      }
+      spectral_guardian?: boolean
+    }
+  }
+}
+
+
 interface Attack {
   formatDescription(description: string, bono: number): string | undefined
   effects: {
@@ -144,7 +179,7 @@ interface Attack {
   }
 }
 
-const effects_info: Attack = {
+const attacks_effects: Attack = {
   formatDescription(description: string, bono?: number) {
     if (bono) {
       return description.replace('${bono}', `${bono}`)
@@ -249,5 +284,74 @@ const effects_info: Attack = {
   },
 }
 
+const buffs_effects:buffs={
+  formatDescription(description:string, bonoIncrement?:number, scaling?:number, decreaseStat?:number, incrementStat?:number, active?:number, keepactive?:number) {
 
-export { BuffInterface, typeAttack, typeSkill, Attack, effects_info }
+    if(bonoIncrement){
+      description = description.replace('${bonoIncrement}', `${bonoIncrement}`)
+    }
+    if(scaling){
+      description += ` Cada **${scaling}PJ** aumenta el bonificador en +1.`
+    }
+    if(decreaseStat){
+      description = description.replace('${decreaseStat}', `${decreaseStat}`)
+    }
+    if(incrementStat){
+      description = description.replace('${incrementStat}', `${incrementStat}`)
+    }
+
+    description = description.replace('${active}', `${active}`)
+    description = description.replace('${keepactive}', `${keepactive}`)
+    return description
+  },
+  buffos:{
+    'Modo sabio':{
+      description: 'entra en modo sabio. aumenta todas las estadistica en **+${bonoIncrement}**. Activar consume **${active}PK** y mantener el modo sabio consume **${keepactive}**',
+      bonoIncrement: 1,
+      costPj:{
+        buy:10,
+        scaling:1
+      },
+      costKi:{
+        active:5,
+        keepActive:3
+      }
+    },
+    'Marca Maldita':{
+      description:'el jugador desbloquea su marca maldita. aumenta el ataque y daño (Melee y Distancia) en **+${bonoIncrement}**. reduce la defensa (Melee y Distancia) y la absorcion en **-${decreaseStat}**. Activar consume **${active}PK** y mantener el modo sabio consume **${keepactive}**',
+      bonoIncrement:2,
+      incrementStat: {
+        Daño: 2,
+        Ataque: 2
+      },
+      decreaseStat:{
+        defensa:1,
+        absorcion:1
+      },
+      costPj:{
+        buy:4,
+        scaling:1
+      },
+      costKi:{
+        active:2,
+        keepActive:1
+      }
+    },
+    'Acelerador mental':{
+      description:'el jugador puede aumentar al velocidad de su proceso mental. aumenta la iniciativa del jugador en combate en **+${incrementStat}**. Activar consume **${active}PK** y mantener el modo sabio consume **${keepactive}**',
+      incrementStat:{
+        iniciativa:3
+      },
+      costPj:{
+        buy:4,
+        scaling:1
+      },
+      costKi:{
+        active:2,
+        keepActive:1
+      }
+    }
+  }
+}
+
+export { BuffInterface, typeAttack, typeSkill, Attack, attacks_effects, buffs_effects }
